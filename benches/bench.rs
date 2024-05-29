@@ -18,9 +18,12 @@ use ark_relations::{
 use ark_std::{ops::Mul, UniformRand};
 use blake2::Blake2s;
 use rand_chacha::ChaChaRng;
-
-const NUM_PROVE_REPEATITIONS: usize = 10;
-const NUM_VERIFY_REPEATITIONS: usize = 50;
+// GRT modify
+use std::env;
+use std::ops::Div;
+// GRT modify
+const NUM_PROVE_REPEATITIONS: usize = 5;
+const NUM_VERIFY_REPEATITIONS: usize = 10;
 
 #[derive(Copy)]
 struct DummyCircuit<F: PrimeField> {
@@ -174,7 +177,62 @@ fn bench_verify() {
     marlin_verify_bench!(mnt6big, MNT6BigFr, MNT6_753);
 }
 
+// GRT modify
+macro_rules! marlin_prove_bench_test {
+    ($bench_name:ident, $bench_field:ty, $bench_pairing_engine:ty) => {
+
+        const MINIMUM_DEGREE: usize = 10;
+        const MAXIMUM_DEGREE: usize = 23;
+        for num_constraints in MINIMUM_DEGREE..MAXIMUM_DEGREE {
+            let rng = &mut ark_std::test_rng();
+            let c = DummyCircuit::<$bench_field> {
+                a: Some(<$bench_field>::rand(rng)),
+                b: Some(<$bench_field>::rand(rng)),
+                num_variables:  (1 << (num_constraints)) - 100,
+                num_constraints: (1 << num_constraints) - 100,
+            };
+
+            let srs = Marlin::<
+                $bench_field,
+                SonicKZG10<$bench_pairing_engine, DensePolynomial<$bench_field>>,
+                SimpleHashFiatShamirRng<Blake2s, ChaChaRng>,
+            >::universal_setup((1 << num_constraints), (1 << num_constraints), 3 * (1 << num_constraints), rng)
+            .unwrap();
+            let (pk, _) = Marlin::<
+                $bench_field,
+                SonicKZG10<$bench_pairing_engine, DensePolynomial<$bench_field>>,
+                SimpleHashFiatShamirRng<Blake2s, ChaChaRng>,
+            >::index(&srs, c)
+            .unwrap();
+
+            let start = ark_std::time::Instant::now();
+
+            for _ in 0..NUM_PROVE_REPEATITIONS {
+                println!("@@ GRT prove one degree: {:?}; start", num_constraints);
+                let start1 = ark_std::time::Instant::now();
+                let _ = Marlin::<
+                    $bench_field,
+                    SonicKZG10<$bench_pairing_engine, DensePolynomial<$bench_field>>,
+                    SimpleHashFiatShamirRng<Blake2s, ChaChaRng>,
+                >::prove(&pk, c.clone(), rng)
+                .unwrap();
+                println!("@@ GRT prove one degree: {:?}; time: {:?}", num_constraints, start1.elapsed());
+            }
+
+        println!("###### GRT average prove degree:{:?}; time for {}: {:?}", num_constraints, stringify!($bench_pairing_engine), start.elapsed().div(NUM_PROVE_REPEATITIONS as u32));
+        }
+
+    };
+}
+
+// GRT modify
+fn bench_prove_test() {
+    marlin_prove_bench_test!(bls, BlsFr, Bls12_381);
+}
+
 fn main() {
-    bench_prove();
-    bench_verify();
+    // GRT modify
+    // bench_prove();
+    // bench_verify();
+    bench_prove_test();
 }

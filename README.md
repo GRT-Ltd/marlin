@@ -30,7 +30,7 @@ The construction in this library follows the methodology introduced in the [Marl
 
 The first ingredient is provided as part of this library, and is an efficient algebraic holographic proof for R1CS (a generalization of arithmetic circuit satisfiability supported by many argument systems). The second ingredient is imported from [`poly-commit`](https://github.com/arkworks-rs/poly-commit). See below for evaluation details.
 
-## Build guide
+## Build guide (modified by GRT )
 
 The library compiles on the `stable` toolchain of the Rust compiler. To install the latest version of Rust, first install `rustup` by following the instructions [here](https://rustup.rs/), or via your platform's package manager. Once `rustup` is installed, install the Rust toolchain by invoking:
 ```bash
@@ -39,17 +39,45 @@ rustup install stable
 
 After that, use `cargo` (the standard Rust build tool) to build the library:
 ```bash
-git clone https://github.com/arkworks-rs/marlin.git
-cd marlin
-cargo build --release
+git clone https://github.com/GRT-Ltd/marlin.git
 ```
 
-This library comes with some unit and integration tests. Run these tests with:
+Run bench by cpu
+
 ```bash
-cargo test
+cargo bench
 ```
 
-Lastly, this library is instrumented with profiling infrastructure that prints detailed traces of execution time. To enable this, compile with `cargo build --features print-trace`.
+Run bench by gpu
+
+```bash
+cargo bench --features "cuda"
+```
+
+
+
+Lastly, this library is instrumented with profiling infrastructure that prints detailed traces of execution time. To enable this, compile with
+
+Run bench by cpu for tracking logs
+
+```bash
+cargo bench --features "print-trace"
+```
+
+Run bench by gpu for tracking logs
+
+```bash
+cargo bench --features "cuda print-trace"
+```
+
+Add **CUDA** code to **FFT**, **MSM**, **tracking logs**,  detailed code can be found in the project is as follows:
+
+```rust
+// GRT modify
+```
+
+
+
 
 
 ## Benchmarks
